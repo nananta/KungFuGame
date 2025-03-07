@@ -5,10 +5,14 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "node server_local.js",
     "build": "echo 'No build step required'"
   },
   "dependencies": {
     "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   },
   "engines": {
     "node": ">=14.0.0"
