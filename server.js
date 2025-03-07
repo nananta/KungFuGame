@@ -1,54 +1,19 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
 const path = require('path');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const PORT = 3000;
+// Serve static files
+app.use(express.static(__dirname));
 
-const MIME_TYPES = {
-    '.html': 'text/html',
-    '.css': 'text/css',
-    '.js': 'text/javascript',
-    '.json': 'application/json',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-};
-
-const server = http.createServer((req, res) => {
-    console.log(`${req.method} ${req.url}`);
-    
-    // Handle root path
-    let filePath = req.url === '/' ? './index.html' : '.' + req.url;
-    
-    // Get file extension
-    const extname = path.extname(filePath);
-    let contentType = MIME_TYPES[extname] || 'application/octet-stream';
-    
-    // Read file
-    fs.readFile(filePath, (err, content) => {
-        if (err) {
-            if (err.code === 'ENOENT') {
-                // Page not found
-                fs.readFile('./index.html', (err, content) => {
-                    res.writeHead(200, { 'Content-Type': 'text/html' });
-                    res.end(content, 'utf-8');
-                });
-            } else {
-                // Server error
-                res.writeHead(500);
-                res.end(`Server Error: ${err.code}`);
-            }
-        } else {
-            // Success
-            res.writeHead(200, { 'Content-Type': contentType });
-            res.end(content, 'utf-8');
-        }
-    });
+// Serve index.html for all routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}/`);
-    console.log('Press Ctrl+C to stop the server');
-}); 
+// Only start the server if we're not in a GitHub Pages environment
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+} 

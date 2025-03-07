@@ -2,24 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.5">
-    <title>Kung Fu Panda Physics!</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kung Fu Game</title>
+    <link rel="stylesheet" href="./style.css">
     <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAABEklEQVR42mNkYGBgZGRkZGJgYPgPxAwMjP8ZGBn+wTDjfwYmxv8gNgOc/R/OZgJpZGRiYAYpBmFmJgYWZkYGVhYmBjZWZgZ2NhYGDnYWBk4OVgYuTjYGbm52Bh4eDgZeXk4GPj5uBgFBHgZhYT4GUTEBBjFxQQYJSWEGaRlRBjl5MQYFRXEGZRVJBlU1aQZ1DRkGTS05Bh1dBQZ9AyUGI2NlBhNTFQZzCzUGK2sNBjt7LQZHJx0GF1c9Bg9PAwZvHyMGP38ThoBAM4aQUAuG8AgrhogoG4bYODuGxCQHhuQUJ4a0dBeGzCx3hpxcT4a8fG+GouIAhtIyf4by8kCGqupghpraEIb6hlAGAJZEV7eYot8KAAAAAElFTkSuQmCC" type="image/png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
 <body>
-    <div class="game-container">
-        <div id="score">Score: 0</div>
+    <div id="game-container">
         <div id="game-canvas"></div>
-        <div class="controls">
-            <button id="restart-btn">Restart</button>
-        </div>
+        <div id="score">Score: 0</div>
+        <button id="restart-btn" style="display: none;">Restart Game</button>
     </div>
-    
-    <!-- Physics Engine -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-    
-    <!-- Game Logic -->
-    <script src="game.js"></script>
+    <script src="./game.js"></script>
 </body>
 </html> 
