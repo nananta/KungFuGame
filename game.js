@@ -76,8 +76,8 @@ function init() {
         element: gameCanvas,
         engine: engine,
         options: {
-            width: gameCanvas.clientWidth,
-            height: gameCanvas.clientHeight,
+            width: window.innerWidth,
+            height: window.innerHeight,
             wireframes: false,
             background: 'transparent',
             pixelRatio: 'auto'
@@ -89,13 +89,13 @@ function init() {
     gameCanvas.style.backgroundSize = 'cover';
     gameCanvas.style.backgroundPosition = 'center bottom';
     
-    // Handle window resize
+    // Add window resize handler
     window.addEventListener('resize', () => {
         // Update render dimensions
-        render.canvas.width = gameCanvas.clientWidth;
-        render.canvas.height = gameCanvas.clientHeight;
-        render.options.width = gameCanvas.clientWidth;
-        render.options.height = gameCanvas.clientHeight;
+        render.canvas.width = window.innerWidth;
+        render.canvas.height = window.innerHeight;
+        render.options.width = window.innerWidth;
+        render.options.height = window.innerHeight;
         
         // Update ground position
         if (ground) {
@@ -107,6 +107,7 @@ function init() {
         
         // Update wall positions
         if (walls.length >= 2) {
+            const wallThickness = 50;
             Body.setPosition(walls[0], {
                 x: -wallThickness / 2,
                 y: render.options.height / 2
