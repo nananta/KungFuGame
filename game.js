@@ -70,19 +70,28 @@ function init() {
         velocityIterations: 8
     });
     
-    // Create renderer with responsive dimensions
+    // Create renderer with proper dimensions
     const gameCanvas = document.getElementById('game-canvas');
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
     render = Render.create({
         element: gameCanvas,
         engine: engine,
         options: {
-            width: window.innerWidth,
-            height: window.innerHeight,
+            width: width,
+            height: height,
             wireframes: false,
             background: 'transparent',
-            pixelRatio: 'auto'
+            pixelRatio: window.devicePixelRatio
         }
     });
+    
+    // Set canvas size explicitly
+    render.canvas.style.width = '100%';
+    render.canvas.style.height = '100%';
+    render.canvas.width = width;
+    render.canvas.height = height;
     
     // Set background image using CSS
     gameCanvas.style.backgroundImage = `url(${BACKGROUND_IMAGE_PATH})`;
@@ -91,17 +100,24 @@ function init() {
     
     // Add window resize handler
     window.addEventListener('resize', () => {
-        // Update render dimensions
-        render.canvas.width = window.innerWidth;
-        render.canvas.height = window.innerHeight;
-        render.options.width = window.innerWidth;
-        render.options.height = window.innerHeight;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        // Update canvas size
+        render.canvas.width = width;
+        render.canvas.height = height;
+        render.options.width = width;
+        render.options.height = height;
+        
+        // Update bounds
+        render.bounds.max.x = width;
+        render.bounds.max.y = height;
         
         // Update ground position
         if (ground) {
             Body.setPosition(ground, {
-                x: render.options.width / 2,
-                y: render.options.height - GROUND_HEIGHT / 2
+                x: width / 2,
+                y: height - GROUND_HEIGHT / 2
             });
         }
         
@@ -110,11 +126,11 @@ function init() {
             const wallThickness = 50;
             Body.setPosition(walls[0], {
                 x: -wallThickness / 2,
-                y: render.options.height / 2
+                y: height / 2
             });
             Body.setPosition(walls[1], {
-                x: render.options.width + wallThickness / 2,
-                y: render.options.height / 2
+                x: width + wallThickness / 2,
+                y: height / 2
             });
         }
     });
