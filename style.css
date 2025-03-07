@@ -18,11 +18,11 @@ body {
 
 #game-container {
     position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    width: 800px;
+    height: 600px;
+    max-width: 100%;
+    max-height: 100vh;
+    aspect-ratio: 4/3;
 }
 
 #game-canvas {
@@ -34,6 +34,7 @@ body {
 #game-canvas canvas {
     width: 100% !important;
     height: 100% !important;
+    object-fit: contain;
 }
 
 #score {
@@ -67,8 +68,40 @@ body {
     background-color: #45a049;
 }
 
+.game-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #FF5722;
+    font-size: 32px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    animation: messageAnimation 0.5s ease-out;
+}
+
+@keyframes messageAnimation {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
 /* Media query for smaller screens */
 @media (max-width: 768px) {
+    #game-container {
+        width: 100%;
+        height: auto;
+    }
+    
     #score {
         font-size: 18px;
         top: 10px;
@@ -135,24 +168,6 @@ body {
 
 .controls p:hover {
     color: #333;
-}
-
-.game-message {
-    animation: messageAnimation 0.5s ease-out;
-}
-
-@keyframes messageAnimation {
-    0% {
-        transform: translate(-50%, -50%) scale(0.5);
-        opacity: 0;
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1.2);
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-    }
 }
 
 /* Responsive design */

@@ -70,10 +70,10 @@ function init() {
         velocityIterations: 8
     });
     
-    // Create renderer with proper dimensions
+    // Create renderer with fixed dimensions
     const gameCanvas = document.getElementById('game-canvas');
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width = 800;  // Fixed width
+    const height = 600; // Fixed height
     
     render = Render.create({
         element: gameCanvas,
@@ -83,15 +83,9 @@ function init() {
             height: height,
             wireframes: false,
             background: 'transparent',
-            pixelRatio: window.devicePixelRatio
+            pixelRatio: 1
         }
     });
-    
-    // Set canvas size explicitly
-    render.canvas.style.width = '100%';
-    render.canvas.style.height = '100%';
-    render.canvas.width = width;
-    render.canvas.height = height;
     
     // Set background image using CSS
     gameCanvas.style.backgroundImage = `url(${BACKGROUND_IMAGE_PATH})`;
@@ -100,20 +94,7 @@ function init() {
     
     // Add window resize handler
     window.addEventListener('resize', () => {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        
-        // Update canvas size
-        render.canvas.width = width;
-        render.canvas.height = height;
-        render.options.width = width;
-        render.options.height = height;
-        
-        // Update bounds
-        render.bounds.max.x = width;
-        render.bounds.max.y = height;
-        
-        // Update ground position
+        // Keep the same dimensions but update positions
         if (ground) {
             Body.setPosition(ground, {
                 x: width / 2,
