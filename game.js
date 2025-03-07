@@ -898,6 +898,9 @@ function increaseScore(points) {
 function restartGame() {
     console.log("Restarting game...");
     
+    // Keep restart button visible
+    document.getElementById('restart-btn').style.display = 'block';
+    
     // Clear original positions
     originalObstaclePositions = [];
     
@@ -1119,6 +1122,8 @@ function deactivateGiantSizePowerUp() {
 // Initialize game when page loads
 window.addEventListener('load', () => {
     console.log("Page loaded, initializing game...");
+    // Show restart button
+    document.getElementById('restart-btn').style.display = 'block';
     // Initialize game directly
     init();
 }); 

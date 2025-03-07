@@ -50,9 +50,8 @@ body {
 
 #restart-btn {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 20px;
+    right: 20px;
     padding: 10px 20px;
     font-size: 20px;
     background-color: #4CAF50;
@@ -61,11 +60,19 @@ body {
     border-radius: 5px;
     cursor: pointer;
     z-index: 100;
-    display: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
 }
 
 #restart-btn:hover {
     background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#restart-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .game-message {
