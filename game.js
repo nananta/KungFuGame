@@ -58,6 +58,14 @@ const keys = {
     up: false
 };
 
+// Add touch control variables
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+const SWIPE_THRESHOLD = 50; // Minimum distance for a swipe
+const SWIPE_RESTRAINT = 100; // Maximum perpendicular distance for a swipe
+
 // Initialize the game
 function init() {
     console.log("Initializing game...");
@@ -402,7 +410,7 @@ function setupEventListeners() {
             jumpSound.play().catch(() => {});
             
             // Give panda a more controlled upward boost
-            Body.setVelocity(panda, { x: panda.velocity.x, y: -15 }); // Reduced from -25 to -15
+            Body.setVelocity(panda, { x: panda.velocity.x, y: -15 });
             
             // Apply explosive force to nearby obstacles
             applyExplosiveForce();
@@ -424,6 +432,11 @@ function setupEventListeners() {
         if (e.key === 'ArrowLeft') keys.left = false;
         if (e.key === 'ArrowUp') keys.up = false;
     });
+    
+    // Add touch event listeners
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchmove', handleTouchMove, false);
+    document.addEventListener('touchend', handleTouchEnd, false);
     
     // Restart button - remove any existing event listeners first
     const restartBtn = document.getElementById('restart-btn');
@@ -500,6 +513,78 @@ function setupEventListeners() {
             }
         }
     });
+}
+
+// Handle touch start
+function handleTouchStart(evt) {
+    const firstTouch = evt.touches[0];
+    touchStartX = firstTouch.clientX;
+    touchStartY = firstTouch.clientY;
+}
+
+// Handle touch move
+function handleTouchMove(evt) {
+    if (!touchStartX || !touchStartY) {
+        return;
+    }
+
+    touchEndX = evt.touches[0].clientX;
+    touchEndY = evt.touches[0].clientY;
+
+    handleSwipe();
+}
+
+// Handle touch end
+function handleTouchEnd(evt) {
+    // Reset all touch-triggered keys
+    keys.left = false;
+    keys.right = false;
+    keys.up = false;
+    
+    // Reset touch coordinates
+    touchStartX = 0;
+    touchStartY = 0;
+    touchEndX = 0;
+    touchEndY = 0;
+}
+
+// Handle swipe detection and movement
+function handleSwipe() {
+    const xDiff = touchEndX - touchStartX;
+    const yDiff = touchEndY - touchStartY;
+
+    // Ensure there was enough movement to be considered a swipe
+    if (Math.abs(xDiff) > SWIPE_THRESHOLD || Math.abs(yDiff) > SWIPE_THRESHOLD) {
+        if (Math.abs(xDiff) > Math.abs(yDiff)) { // Horizontal swipe
+            if (xDiff > 0) {
+                // Swipe right
+                keys.right = true;
+                keys.left = false;
+            } else {
+                // Swipe left
+                keys.left = true;
+                keys.right = false;
+            }
+        } else { // Vertical swipe
+            if (yDiff < 0) { // Swipe up
+                if (!keys.up) {
+                    keys.up = true;
+                    // Give panda a more controlled upward boost
+                    Body.setVelocity(panda, { x: panda.velocity.x, y: -15 });
+                    // Apply explosive force to nearby obstacles
+                    applyExplosiveForce();
+                    // Play jump sound
+                    jumpSound.currentTime = 0;
+                    jumpSound.play().catch(() => {});
+                }
+            }
+        }
+        
+        // Start game on first touch
+        if (!gameStarted) {
+            gameStarted = true;
+        }
+    }
 }
 
 // Show message

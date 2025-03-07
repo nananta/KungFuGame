@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Kung Fu Game</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAABEklEQVR42mNkYGBgZGRkZGJgYPgPxAwMjP8ZGBn+wTDjfwYmxv8gNgOc/R/OZgJpZGRiYAYpBmFmJgYWZkYGVhYmBjZWZgZ2NhYGDnYWBk4OVgYuTjYGbm52Bh4eDgZeXk4GPj5uBgFBHgZhYT4GUTEBBjFxQQYJSWEGaRlRBjl5MQYFRXEGZRVJBlU1aQZ1DRkGTS05Bh1dBQZ9AyUGI2NlBhNTFQZzCzUGK2sNBjt7LQZHJx0GF1c9Bg9PAwZvHyMGP38ThoBAM4aQUAuG8AgrhogoG4bYODuGxCQHhuQUJ4a0dBeGzCx3hpxcT4a8fG+GouIAhtIyf4by8kCGqupghpraEIb6hlAGAJZEV7eYot8KAAAAAElFTkSuQmCC" type="image/png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        /* Prevent touch callout and double-tap-to-zoom */
+        html, body {
+            -webkit-touch-callout: none;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">
