@@ -66,6 +66,12 @@ let touchEndY = 0;
 const SWIPE_THRESHOLD = 50; // Minimum distance for a swipe
 const SWIPE_RESTRAINT = 100; // Maximum perpendicular distance for a swipe
 
+// Add touch tracking variables
+let touchActive = false;
+let touchCenterX = 0;
+const TOUCH_DEADZONE = 20; // Pixels from center before movement starts
+const TOUCH_SENSITIVITY = 0.5; // Movement sensitivity
+
 // Initialize the game
 function init() {
     console.log("Initializing game...");
@@ -433,10 +439,15 @@ function setupEventListeners() {
         if (e.key === 'ArrowUp') keys.up = false;
     });
     
-    // Add touch event listeners
-    document.addEventListener('touchstart', handleTouchStart, false);
-    document.addEventListener('touchmove', handleTouchMove, false);
-    document.addEventListener('touchend', handleTouchEnd, false);
+    // Update touch event listeners
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    // Prevent default touch behaviors
+    document.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+    }, { passive: false });
     
     // Restart button - remove any existing event listeners first
     const restartBtn = document.getElementById('restart-btn');
@@ -517,25 +528,85 @@ function setupEventListeners() {
 
 // Handle touch start
 function handleTouchStart(evt) {
+    evt.preventDefault();
     const firstTouch = evt.touches[0];
     touchStartX = firstTouch.clientX;
     touchStartY = firstTouch.clientY;
+    touchCenterX = touchStartX; // Set center point for relative movement
+    touchActive = true;
+    
+    // Start game on first touch
+    if (!gameStarted) {
+        gameStarted = true;
+    }
 }
 
 // Handle touch move
 function handleTouchMove(evt) {
-    if (!touchStartX || !touchStartY) {
-        return;
-    }
+    evt.preventDefault();
+    if (!touchActive) return;
 
     touchEndX = evt.touches[0].clientX;
     touchEndY = evt.touches[0].clientY;
 
-    handleSwipe();
+    // Calculate horizontal distance from touch start
+    const horizontalDiff = touchEndX - touchCenterX;
+
+    // Apply movement based on touch position
+    if (Math.abs(horizontalDiff) > TOUCH_DEADZONE) {
+        // Moving right
+        if (horizontalDiff > 0) {
+            keys.right = true;
+            keys.left = false;
+            // Apply force proportional to distance
+            const force = Math.min(Math.abs(horizontalDiff) * TOUCH_SENSITIVITY, MAX_SPEED);
+            Body.setVelocity(panda, { 
+                x: force, 
+                y: panda.velocity.y 
+            });
+        } 
+        // Moving left
+        else {
+            keys.left = true;
+            keys.right = false;
+            // Apply force proportional to distance
+            const force = Math.min(Math.abs(horizontalDiff) * TOUCH_SENSITIVITY, MAX_SPEED);
+            Body.setVelocity(panda, { 
+                x: -force, 
+                y: panda.velocity.y 
+            });
+        }
+    } else {
+        // Within deadzone - stop horizontal movement
+        keys.right = false;
+        keys.left = false;
+    }
+
+    // Check for upward swipe (jump)
+    const verticalDiff = touchEndY - touchStartY;
+    if (verticalDiff < -SWIPE_THRESHOLD && !keys.up) {
+        keys.up = true;
+        // Give panda a more controlled upward boost
+        Body.setVelocity(panda, { 
+            x: panda.velocity.x, 
+            y: -15 
+        });
+        // Apply explosive force to nearby obstacles
+        applyExplosiveForce();
+        // Play jump sound
+        jumpSound.currentTime = 0;
+        jumpSound.play().catch(() => {});
+        
+        // Reset vertical touch start to prevent multiple jumps
+        touchStartY = touchEndY;
+    }
 }
 
 // Handle touch end
 function handleTouchEnd(evt) {
+    evt.preventDefault();
+    touchActive = false;
+    
     // Reset all touch-triggered keys
     keys.left = false;
     keys.right = false;
@@ -546,45 +617,6 @@ function handleTouchEnd(evt) {
     touchStartY = 0;
     touchEndX = 0;
     touchEndY = 0;
-}
-
-// Handle swipe detection and movement
-function handleSwipe() {
-    const xDiff = touchEndX - touchStartX;
-    const yDiff = touchEndY - touchStartY;
-
-    // Ensure there was enough movement to be considered a swipe
-    if (Math.abs(xDiff) > SWIPE_THRESHOLD || Math.abs(yDiff) > SWIPE_THRESHOLD) {
-        if (Math.abs(xDiff) > Math.abs(yDiff)) { // Horizontal swipe
-            if (xDiff > 0) {
-                // Swipe right
-                keys.right = true;
-                keys.left = false;
-            } else {
-                // Swipe left
-                keys.left = true;
-                keys.right = false;
-            }
-        } else { // Vertical swipe
-            if (yDiff < 0) { // Swipe up
-                if (!keys.up) {
-                    keys.up = true;
-                    // Give panda a more controlled upward boost
-                    Body.setVelocity(panda, { x: panda.velocity.x, y: -15 });
-                    // Apply explosive force to nearby obstacles
-                    applyExplosiveForce();
-                    // Play jump sound
-                    jumpSound.currentTime = 0;
-                    jumpSound.play().catch(() => {});
-                }
-            }
-        }
-        
-        // Start game on first touch
-        if (!gameStarted) {
-            gameStarted = true;
-        }
-    }
 }
 
 // Show message
@@ -663,11 +695,11 @@ function handlePlayerMovement() {
     // Vertical bounds
     if (panda.position.y < verticalMargin) {
         Body.setPosition(panda, { x: panda.position.x, y: verticalMargin });
-        Body.setVelocity(panda, { x: panda.velocity.x, y: Math.abs(panda.velocity.y) * 0.5 }); // Bounce down
+        Body.setVelocity(panda, { x: panda.velocity.x, y: Math.abs(panda.velocity.y) * 0.5 });
     }
     if (panda.position.y > render.options.height - GROUND_HEIGHT - verticalMargin) {
         Body.setPosition(panda, { x: panda.position.x, y: render.options.height - GROUND_HEIGHT - verticalMargin });
-        Body.setVelocity(panda, { x: panda.velocity.x, y: Math.min(panda.velocity.y, 0) }); // Stop downward velocity
+        Body.setVelocity(panda, { x: panda.velocity.x, y: Math.min(panda.velocity.y, 0) });
     }
     
     // Limit vertical speed
@@ -677,28 +709,31 @@ function handlePlayerMovement() {
             y: Math.sign(panda.velocity.y) * MAX_VERTICAL_SPEED
         });
     }
-    
-    // Apply horizontal movement force
-    if (keys.right) {
-        const currentSpeed = panda.velocity.x;
-        if (currentSpeed < MAX_SPEED) {
-            Body.applyForce(panda, panda.position, { x: ACCELERATION, y: 0 });
-        }
-    } else if (keys.left) {
-        const currentSpeed = panda.velocity.x;
-        if (currentSpeed > -MAX_SPEED) {
-            Body.applyForce(panda, panda.position, { x: -ACCELERATION, y: 0 });
-        }
-    } else {
-        // When idle, completely stop horizontal movement if velocity is small
-        if (Math.abs(panda.velocity.x) <= 0.5) {
-            Body.setVelocity(panda, { x: 0, y: panda.velocity.y });
-            // Also set angular velocity to 0 to prevent rotation
-            Body.setAngularVelocity(panda, 0);
+
+    // Handle keyboard movement if touch is not active
+    if (!touchActive) {
+        // Apply horizontal movement force for keyboard controls
+        if (keys.right) {
+            const currentSpeed = panda.velocity.x;
+            if (currentSpeed < MAX_SPEED) {
+                Body.applyForce(panda, panda.position, { x: ACCELERATION, y: 0 });
+            }
+        } else if (keys.left) {
+            const currentSpeed = panda.velocity.x;
+            if (currentSpeed > -MAX_SPEED) {
+                Body.applyForce(panda, panda.position, { x: -ACCELERATION, y: 0 });
+            }
         } else {
-            // Apply stronger friction when not pressing movement keys to prevent drift
-            const frictionDirection = panda.velocity.x > 0 ? -1 : 1;
-            Body.applyForce(panda, panda.position, { x: FRICTION * 5 * frictionDirection, y: 0 });
+            // When idle, completely stop horizontal movement if velocity is small
+            if (Math.abs(panda.velocity.x) <= 0.5) {
+                Body.setVelocity(panda, { x: 0, y: panda.velocity.y });
+                // Also set angular velocity to 0 to prevent rotation
+                Body.setAngularVelocity(panda, 0);
+            } else {
+                // Apply stronger friction when not pressing movement keys to prevent drift
+                const frictionDirection = panda.velocity.x > 0 ? -1 : 1;
+                Body.applyForce(panda, panda.position, { x: FRICTION * 5 * frictionDirection, y: 0 });
+            }
         }
     }
     
