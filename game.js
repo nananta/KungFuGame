@@ -50,6 +50,7 @@ const DENSITY = 0.005; // Lower density to make blocks lighter and more responsi
 const PANDA_IMAGE_PATH = './assets/KungFuPanda.png';
 const BACKGROUND_IMAGE_PATH = './assets/ChineseMountain.png';
 const RAT_NINJA_IMAGE_PATH = './assets/RatNinja.png';
+const ZOMBIE_IMAGE_PATH = './assets/Zombie.png';
 
 // Key states
 const keys = {
@@ -449,11 +450,8 @@ function setupEventListeners() {
         e.preventDefault();
     }, { passive: false });
     
-    // Restart button - remove any existing event listeners first
-    const restartBtn = document.getElementById('restart-btn');
-    const newRestartBtn = restartBtn.cloneNode(true);
-    restartBtn.parentNode.replaceChild(newRestartBtn, restartBtn);
-    newRestartBtn.addEventListener('click', restartGame);
+    // Set up restart button
+    setupRestartButton();
     
     // Collision events
     Events.on(engine, 'collisionStart', (event) => {
@@ -486,40 +484,26 @@ function setupEventListeners() {
                 const pandaVelocity = panda.velocity;
                 const forceMagnitude = Math.sqrt(pandaVelocity.x * pandaVelocity.x + pandaVelocity.y * pandaVelocity.y);
                 
-                // Increased force multiplier for more dramatic movement
-                const forceMultiplier = 0.05 * powerLevel;
-                
-                // Calculate impact angle
-                const impactAngle = Math.atan2(obstacle.position.y - panda.position.y, 
-                                              obstacle.position.x - panda.position.x);
-                
-                // Apply strong force in the impact direction
-                Body.setVelocity(obstacle, {
-                    x: Math.cos(impactAngle) * forceMagnitude * forceMultiplier * 2,
-                    y: Math.sin(impactAngle) * forceMagnitude * forceMultiplier * 2
-                });
-                
-                // Add slight spin for visual interest while keeping block stable
-                Body.setAngularVelocity(obstacle, (Math.random() - 0.5) * 0.1);
-                
-                // Play break sound
-                breakSound.currentTime = 0;
-                breakSound.play().catch(() => {});
-                
-                // Update score and combo as before
+                // Only process collision if force is significant
                 if (forceMagnitude > 5) {
-                    const points = Math.floor(forceMagnitude * powerLevel);
-                    increaseScore(points);
+                    // Handle enemy collision with appropriate effects
+                    handleEnemyCollision(obstacle, forceMagnitude);
                     
-                    combo++;
-                    comboTimer = Date.now();
+                    // Increased force multiplier for more dramatic movement
+                    const forceMultiplier = 0.05 * powerLevel;
                     
-                    if (combo % 5 === 0 && powerLevel < 3) {
-                        powerLevel++;
-                        powerUpSound.currentTime = 0;
-                        powerUpSound.play().catch(() => {});
-                        showMessage(`POWER UP! x${powerLevel}`);
-                    }
+                    // Calculate impact angle
+                    const impactAngle = Math.atan2(obstacle.position.y - panda.position.y, 
+                                                  obstacle.position.x - panda.position.x);
+                    
+                    // Apply strong force in the impact direction
+                    Body.setVelocity(obstacle, {
+                        x: Math.cos(impactAngle) * forceMagnitude * forceMultiplier * 2,
+                        y: Math.sin(impactAngle) * forceMagnitude * forceMultiplier * 2
+                    });
+                    
+                    // Add slight spin for visual interest while keeping block stable
+                    Body.setAngularVelocity(obstacle, (Math.random() - 0.5) * 0.1);
                 }
             }
         }
@@ -862,24 +846,34 @@ function createWall(x, groundY) {
     }
 }
 
-// Create a box with the RatNinja image
+// Create a box with random enemy type (Zombie or Rat Ninja)
 function createBox(x, y, width, height, color) {
-    // Make the rat ninja half the size of the hero
-    const ratSize = PANDA_SIZE / 2;
+    // Make the enemies half the size of the hero
+    const enemySize = PANDA_SIZE / 2;
     
-    const box = Bodies.rectangle(x, y, ratSize, ratSize, {
+    // Randomly choose between Zombie and Rat Ninja
+    const isZombie = Math.random() < 0.5;
+    const enemyTexture = isZombie ? ZOMBIE_IMAGE_PATH : RAT_NINJA_IMAGE_PATH;
+    const enemyLabel = isZombie ? 'zombie' : 'rat-ninja';
+    
+    const box = Bodies.rectangle(x, y, enemySize, enemySize, {
         density: DENSITY,
         friction: FRICTION_VALUE,
         frictionAir: AIR_FRICTION,
         restitution: RESTITUTION,
+        label: enemyLabel,
         render: {
             sprite: {
-                texture: RAT_NINJA_IMAGE_PATH,
-                xScale: ratSize / 400, // Scale proportionally to the rat size
-                yScale: ratSize / 400  // Scale proportionally to the rat size
+                texture: enemyTexture,
+                xScale: enemySize / 400,
+                yScale: enemySize / 400
             }
         }
     });
+    
+    // Add custom properties for different enemy behaviors
+    box.isZombie = isZombie;
+    box.creationTime = Date.now();
     
     // Add to obstacles array and world
     obstacles.push(box);
@@ -888,7 +882,44 @@ function createBox(x, y, width, height, color) {
     return box;
 }
 
-// Increase score
+// Modify collision handling to account for different enemy types
+function handleEnemyCollision(enemy, forceMagnitude) {
+    // Base points for collision
+    let points = Math.floor(forceMagnitude);
+    
+    // Bonus points based on enemy type
+    if (enemy.isZombie) {
+        points *= 1.5; // Zombies are worth more points
+    }
+    
+    // Update score
+    increaseScore(points * powerLevel);
+    
+    // Update combo
+    combo++;
+    comboTimer = Date.now();
+    
+    // Power level increases every 5 hits
+    if (combo % 5 === 0 && powerLevel < 3) {
+        powerLevel++;
+        powerUpSound.currentTime = 0;
+        powerUpSound.play().catch(() => {});
+        showMessage(`POWER UP! x${powerLevel}`);
+    }
+    
+    // Play appropriate sound effect
+    breakSound.currentTime = 0;
+    breakSound.play().catch(() => {});
+    
+    // Visual feedback based on enemy type and combo
+    if (combo > 1) {
+        showMessage(`${enemy.isZombie ? "SMASHED ZOMBIE" : "CRUSHED NINJA"} x${combo}!`);
+    } else {
+        showMessage(enemy.isZombie ? "SMASHED ZOMBIE!" : "CRUSHED NINJA!");
+    }
+}
+
+// Update score display
 function increaseScore(points) {
     score += points;
     document.getElementById('score').textContent = `Score: ${score} | Combo: ${combo}`;
@@ -1117,6 +1148,30 @@ function deactivateGiantSizePowerUp() {
     
     // Create a new power-up after a delay
     setTimeout(createGiantSizePowerUp, 5000);
+}
+
+// Restart button setup
+function setupRestartButton() {
+    const restartBtn = document.getElementById('restart-btn');
+    
+    // Remove any existing event listeners
+    const newRestartBtn = restartBtn.cloneNode(true);
+    restartBtn.parentNode.replaceChild(newRestartBtn, restartBtn);
+    
+    // Add both click and touch events
+    newRestartBtn.addEventListener('click', handleRestart);
+    newRestartBtn.addEventListener('touchstart', handleRestart);
+    
+    // Prevent default touch behavior
+    newRestartBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+    });
+}
+
+// Handle restart action
+function handleRestart(e) {
+    e.preventDefault();
+    restartGame();
 }
 
 // Initialize game when page loads
